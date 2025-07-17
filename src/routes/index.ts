@@ -62,7 +62,6 @@ router.post("/short", asyncHandler(UserController.shorten));
  *       404:
  *         description: Short URL not found
  */
-router.get("/:shortUrl", asyncHandler(UserController.longer));
 
 
 router.post("/short/customize", asyncHandler(UserController.customize));

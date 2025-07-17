@@ -55,6 +55,8 @@ app.use(morgan("dev")); // Console logging in development
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/:shortUrl", asyncHandler(UserController.longer));
+
 // Routes
 app.use("/api", routes);
 
