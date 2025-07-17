@@ -8,6 +8,15 @@ import { UserController } from "../controllers/candidateController.js";
 
 const router = Router();
 
+// Health check - Must come before the catch-all route
+router.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Url shortener routes
 /**
  * @swagger
@@ -73,14 +82,5 @@ router.get(
     });
   }
 );
-
-// Health check
-router.get("/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Server is running",
-    timestamp: new Date().toISOString(),
-  });
-});
 
 export default router;

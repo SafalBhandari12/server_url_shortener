@@ -3,8 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: find_peers_server
-    image: findpeer.azurecr.io/website:latest
+    container_name: urlShortenerServer
+    image: urlshortenerserver
     restart: unless-stopped
     env_file:
       - .env
