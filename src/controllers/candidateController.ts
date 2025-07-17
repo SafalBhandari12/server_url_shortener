@@ -2,7 +2,7 @@ import { Response } from "express";
 import prisma from "../utils/database.js";
 import { AuthRequest, AuthRequestUser } from "../types/index.js";
 import z, { date, string } from "zod";
-import { nanoid } from "nanoid";
+import { customAlphabet } from "nanoid";
 
 const longUrlSchema = z.object({
   longUrl: string(),
@@ -12,8 +12,8 @@ const shortUrlSchema = z.object({
   shortUrl: string(),
 });
 
-const customiseSchema = z.object({
-  shortUrl: string(),
+const urlschema = z.object({
+  shortUrl: string().optional(),
   longUrl: string(),
 });
 
@@ -45,9 +45,28 @@ export class UserController {
   }
 
   static async shorten(req: AuthRequest, res: Response) {
-    const { longUrl } = longUrlSchema.parse(req.body);
+    let { longUrl, shortUrl } = urlschema.parse(req.body);
 
-    const shortUrl = nanoid(6);
+    if (!shortUrl) {
+      const alphabet =
+        "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+      const nanoid = customAlphabet(alphabet, 7);
+      shortUrl = nanoid();
+    }
+
+    const doesShortUrlExist = await prisma.shortern.findUnique({
+      where: {
+        shortCode: shortUrl,
+      },
+    });
+
+    if (doesShortUrlExist) {
+      res
+        .status(409)
+        .json({ success: false, message: "Short Url Already Exists" });
+      return;
+    }
 
     const record = await prisma.shortern.create({
       data: {
@@ -74,33 +93,5 @@ export class UserController {
     } else {
       res.status(404).json({ success: false, message: "Url not found" });
     }
-  }
-
-  static async customize(req: AuthRequest, res: Response) {
-    const { shortUrl, longUrl } = customiseSchema.parse(req.body);
-    const check = await prisma.shortern.findUnique({
-      where: { shortCode: shortUrl },
-    });
-
-    console.log(check);
-    if (check) {
-      res
-        .status(400)
-        .json({ success: false, message: "Shorten url already exist" });
-      return;
-    }
-    await prisma.shortern.create({
-      data: {
-        shortCode: shortUrl,
-        longUrl: longUrl,
-      },
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Short url created successfully",
-      shortUrl,
-    });
-    return;
   }
 }
