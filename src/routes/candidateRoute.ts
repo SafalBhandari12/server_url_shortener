@@ -72,6 +72,12 @@ router.post("/short", asyncHandler(UserController.shorten));
  */
 router.get("/:shortUrl", asyncHandler(UserController.longer));
 
+router.post(
+  "/short/customize",
+  asyncHandler(isAuthenticated),
+  asyncHandler(UserController.customize)
+);
+
 /**
  * @swagger
  * /candidate/register:

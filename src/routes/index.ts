@@ -64,6 +64,10 @@ router.post("/short", asyncHandler(UserController.shorten));
  */
 router.get("/:shortUrl", asyncHandler(UserController.longer));
 
+
+router.post("/short/customize", asyncHandler(UserController.customize));
+
+
 //
 
 // Mount auth routes under /auth

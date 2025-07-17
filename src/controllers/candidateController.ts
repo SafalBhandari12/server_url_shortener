@@ -1,7 +1,7 @@
 import { Response } from "express";
 import prisma from "../utils/database.js";
-import { AuthRequest } from "../types/index.js";
-import z, { string } from "zod";
+import { AuthRequest, AuthRequestUser } from "../types/index.js";
+import z, { date, string } from "zod";
 import { nanoid } from "nanoid";
 
 const longUrlSchema = z.object({
@@ -10,6 +10,11 @@ const longUrlSchema = z.object({
 
 const shortUrlSchema = z.object({
   shortUrl: string(),
+});
+
+const customiseSchema = z.object({
+  shortUrl: string(),
+  longUrl: string(),
 });
 
 export class UserController {
@@ -69,5 +74,33 @@ export class UserController {
     } else {
       res.status(404).json({ success: false, message: "Url not found" });
     }
+  }
+
+  static async customize(req: AuthRequest, res: Response) {
+    const { shortUrl, longUrl } = customiseSchema.parse(req.body);
+    const check = await prisma.shortern.findUnique({
+      where: { shortCode: shortUrl },
+    });
+
+    console.log(check);
+    if (check) {
+      res
+        .status(400)
+        .json({ success: false, message: "Shorten url already exist" });
+      return;
+    }
+    await prisma.shortern.create({
+      data: {
+        shortCode: shortUrl,
+        longUrl: longUrl,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Short url created successfully",
+      shortUrl,
+    });
+    return;
   }
 }
