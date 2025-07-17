@@ -20,12 +20,13 @@ services:
           "CMD",
           "node",
           "-e",
-          "http.get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
+          "require('http').get('http://localhost:3000/api/health', res => process.exit(res.statusCode === 200 ? 0 : 1))"
         ]
-      interval: 840s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      interval: 14m    # 14 minutes
+      timeout: 10s     # Health check must respond within 10 seconds
+      retries: 3       # Retry up to 3 times before marking as unhealthy
+      start_period: 40s # Wait 40s after container starts before first check
+
 networks:
   app-network:
     driver: bridge
