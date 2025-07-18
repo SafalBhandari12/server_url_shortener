@@ -107,7 +107,7 @@ export class UserController {
       if (expiryTime > oneDayLater) {
         res.status(400).json({
           success: false,
-          message: "Expiry time cannot be more than 1 day for the free user. ",
+          message: "Expiry time cannot be more than 1 day for the unauthorized user. ",
         });
         return;
       }
