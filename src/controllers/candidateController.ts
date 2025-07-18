@@ -64,7 +64,10 @@ export class UserController {
     if (doesShortUrlExist) {
       res
         .status(409)
-        .json({ success: false, message: "Short Url Already Exists" });
+        .json({
+          success: false,
+          message: "Short url already exists use another short url name",
+        });
       return;
     }
 
