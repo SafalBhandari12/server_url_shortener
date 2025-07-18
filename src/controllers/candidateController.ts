@@ -3,6 +3,7 @@ import prisma from "../utils/database.js";
 import { AuthRequest, AuthRequestUser } from "../types/index.js";
 import z, { date, string } from "zod";
 import { customAlphabet } from "nanoid";
+import client from "../utils/redisClient.js";
 
 const longUrlSchema = z.object({
   longUrl: string(),
@@ -62,12 +63,10 @@ export class UserController {
     });
 
     if (doesShortUrlExist) {
-      res
-        .status(409)
-        .json({
-          success: false,
-          message: "Short url already exists use another short url name",
-        });
+      res.status(409).json({
+        success: false,
+        message: "Short url already exists use another short url name",
+      });
       return;
     }
 
@@ -78,6 +77,8 @@ export class UserController {
       },
     });
 
+    await client.set(shortUrl, longUrl);
+
     return res.status(200).json({
       success: true,
       message: "The short url created successfully",
@@ -87,14 +88,16 @@ export class UserController {
   static async longer(req: AuthRequest, res: Response) {
     const { shortUrl } = shortUrlSchema.parse(req.params);
 
-    const record = await prisma.shortern.findUnique({
-      where: { shortCode: shortUrl },
-    });
-
-    if (record) {
-      res.redirect(record.longUrl);
+    const longUrl = await client.get(shortUrl);
+    if (longUrl) {
+      res.redirect(longUrl);
     } else {
-      res.status(404).json({ success: false, message: "Url not found" });
+      const record = await prisma.shortern.findUnique({
+        where: { shortCode: shortUrl },
+      });
+      if (record) {
+        res.redirect(record.longUrl);
+      }
     }
   }
 }

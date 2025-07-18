@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { AuthRequest } from "../types/index.js";
 import userRouter from "./candidateRoute.js";
 import { UserController } from "../controllers/candidateController.js";
+import { shorternRateLimiter } from "../middleware/rateLimiter.js";
 
 const router = Router();
 
@@ -17,10 +18,11 @@ router.get("/health", (req, res) => {
   });
 });
 
-
-router.post("/short", asyncHandler(UserController.shorten));
-
-
+router.post(
+  "/short",
+  shorternRateLimiter,
+  asyncHandler(UserController.shorten)
+);
 
 router.use("/auth", authRouter);
 
