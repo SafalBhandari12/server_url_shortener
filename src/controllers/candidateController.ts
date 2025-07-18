@@ -1,6 +1,6 @@
 import { Response } from "express";
 import prisma from "../utils/database.js";
-import { AuthRequest, AuthRequestUser } from "../types/index.js";
+import { AuthRequest } from "../types/index.js";
 import z, { date, string } from "zod";
 import { customAlphabet } from "nanoid";
 import client from "../utils/redisClient.js";
