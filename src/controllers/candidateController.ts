@@ -109,6 +109,7 @@ export class UserController {
           success: false,
           message: "Expiry time cannot be more than 1 day for the free user. ",
         });
+        return;
       }
       await prisma.shortern.create({
         data: {
