@@ -3,9 +3,8 @@ import authRouter from "./authRoutes.js";
 import { isAuthenticated } from "../middleware/authMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { AuthRequest } from "../types/index.js";
+import shortenRoute from "./shorternRoute.js";
 import userRouter from "./candidateRoute.js";
-import { UserController } from "../controllers/candidateController.js";
-import { shorternRateLimiter } from "../middleware/rateLimiter.js";
 
 const router = Router();
 
@@ -18,11 +17,7 @@ router.get("/health", (req, res) => {
   });
 });
 
-router.post(
-  "/short",
-  shorternRateLimiter,
-  asyncHandler(UserController.shorten)
-);
+router.use("/short", shortenRoute);
 
 router.use("/auth", authRouter);
 

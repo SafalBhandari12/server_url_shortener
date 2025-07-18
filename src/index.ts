@@ -8,6 +8,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
 import routes from "./routes/index.js";
+import shortenRoute from "./routes/shorternRoute.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 import logger from "./utils/logger.js";
@@ -54,6 +55,7 @@ app.use(morgan("dev")); // Console logging in development
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
 
 app.get("/:shortUrl", asyncHandler(UserController.longer));
 
