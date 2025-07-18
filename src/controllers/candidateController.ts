@@ -4,6 +4,7 @@ import { AuthRequest, AuthRequestUser } from "../types/index.js";
 import z, { date, string } from "zod";
 import { customAlphabet } from "nanoid";
 import client from "../utils/redisClient.js";
+import { userDetails } from "../middleware/authMiddleware.js";
 
 const longUrlSchema = z.object({
   longUrl: string(),
@@ -14,8 +15,15 @@ const shortUrlSchema = z.object({
 });
 
 const urlschema = z.object({
-  shortUrl: string().optional(),
-  longUrl: string(),
+  shortUrl: z.string().optional(),
+  longUrl: z.string(),
+  expiryTime: z
+    .string()
+    .transform((val) => new Date(val))
+    .refine((date) => !isNaN(date.getTime()), { message: "Invalid Date" })
+    .refine((date) => date > new Date(), {
+      message: "Cannot be in the past",
+    }),
 });
 
 export class UserController {
@@ -46,7 +54,7 @@ export class UserController {
   }
 
   static async shorten(req: AuthRequest, res: Response) {
-    let { longUrl, shortUrl } = urlschema.parse(req.body);
+    let { longUrl, shortUrl, expiryTime } = urlschema.parse(req.body);
 
     if (!shortUrl) {
       const alphabet =
@@ -70,12 +78,48 @@ export class UserController {
       return;
     }
 
-    const record = await prisma.shortern.create({
-      data: {
-        shortCode: shortUrl,
-        longUrl: longUrl,
-      },
-    });
+    const now = new Date();
+
+    const user = await userDetails(req!);
+    console.log(user);
+
+    if (user) {
+      const thirtyDaysLater = new Date(
+        now.getTime() + 1000 * 60 * 60 * 24 * 30
+      );
+      if (expiryTime > thirtyDaysLater) {
+        res.status(400).json({
+          success: false,
+          message: "Expiry time cannot be more than 30 days",
+        });
+      }
+      console.log(user);
+      await prisma.shortern.create({
+        data: {
+          shortCode: shortUrl,
+          longUrl: longUrl,
+          expiresAt: expiryTime,
+          userId: user.userId,
+        },
+      });
+    } else {
+      const oneDayLater = new Date(now.getTime() + 1000 * 60 * 60 * 24);
+      if (expiryTime > oneDayLater) {
+        res.status(400).json({
+          success: false,
+          message: "Expiry time cannot be more than 1 day for the free user. ",
+        });
+      }
+      await prisma.shortern.create({
+        data: {
+          shortCode: shortUrl,
+          longUrl: longUrl,
+          expiresAt: expiryTime,
+        },
+      });
+    }
+
+    console.log(shortUrl, longUrl, expiryTime);
 
     await client.set(shortUrl, longUrl);
 
@@ -85,6 +129,7 @@ export class UserController {
       shortUrl: shortUrl,
     });
   }
+
   static async longer(req: AuthRequest, res: Response) {
     const { shortUrl } = shortUrlSchema.parse(req.params);
 

@@ -56,7 +56,6 @@ app.use(morgan("dev")); // Console logging in development
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-
 app.get("/:shortUrl", asyncHandler(UserController.longer));
 
 // Routes
@@ -85,9 +84,13 @@ const startServer = async () => {
     // Test database connection
     await prisma.$connect();
     logger.info("Database connected successfully");
+    console.log("Database connected successfully");
 
     app.listen(PORT, () => {
       logger.info(
+        `Server running on port ${PORT} in ${process.env.NODE_ENV} mode`
+      );
+      console.log(
         `Server running on port ${PORT} in ${process.env.NODE_ENV} mode`
       );
     });

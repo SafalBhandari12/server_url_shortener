@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "../utils/database.js";
+import { AuthRequest as authi } from "../types/index.js";
+
 import { userRole } from "@prisma/client";
 
 interface JwtPayload {
@@ -69,3 +71,40 @@ export const isAuthenticated = async (
   req.user = decoded;
   next();
 };
+
+export async function userDetails(req: authi) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  const decoded = jwt.verify(
+    token,
+    process.env.JWT_ACCESS_SECRET!
+  ) as JwtPayload;
+
+  if (decoded.type !== "access") {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId },
+    select: {
+      id: true,
+      email: true,
+      emailVerified: true,
+    },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  if (user.emailVerified === false) {
+    return null;
+  }
+  return decoded;
+}

@@ -41,7 +41,7 @@ model User {
   isRoleDefined Boolean  @default(false)
   role          userRole
 
-  candidate Candidate?
+  shortern Shortern[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -67,9 +67,6 @@ model Candidate {
   userId   String @unique
   
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  shortern Shortern[]
-
   @@map("candidate")
 }
 
@@ -79,9 +76,10 @@ model Shortern {
   longUrl   String
   createdAt DateTime @default(now())
   expiresAt DateTime
-  hits Int
+  hits Int @default(0)
 
-  candidate Candidate @relation(fields: [id],references: [userId])  
+  userId String?
+  user User? @relation(fields: [userId],references: [id])
 
   @@map("shortern")
 }
